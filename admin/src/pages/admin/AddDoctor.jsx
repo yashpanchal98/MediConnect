@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useContext } from 'react';
 import { AdminContext } from '../../context/AdminContext';
-import { axiosFormInstance } from '../../api/axios';
+import { axiosFormInstance, axiosInstance } from '../../api/axios';
 
 function AddDoctor() {
 
@@ -42,6 +42,10 @@ function AddDoctor() {
 
             if (!docImg) {
                 toast.error("Image Not Selected");
+            }
+
+            if(password.length < 8){
+                toast.error("Password must be of 8 characters...");
             }
 
             // create a new FormData instance

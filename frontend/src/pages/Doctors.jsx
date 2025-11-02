@@ -1,28 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { doctors } from "../assets/assets";
+import { axiosInstance } from "../api/axios";
 
 const Doctors = () => {
   const { speciality } = useParams();
-  const [filterDoc, setFilterDoc] = useState([]);
+  const [doctors, setDoctors] = useState([]); // All doctors
+  const [filterDoc, setFilterDoc] = useState([]); // Filtered by speciality
   const navigate = useNavigate();
 
-  useEffect(() => {
-    applyFilter();
-  }, [speciality]);
-
-  const applyFilter = () => {
-    if (speciality) {
-      const filtered = doctors.filter(
-        (doc) => doc.speciality.toLowerCase() === speciality.toLowerCase()
-      );
-      setFilterDoc(filtered);
-    } else {
-      setFilterDoc(doctors);
+  // ✅ Fetch all doctors from backend
+  const fetchDoctors = async () => {
+    try {
+      const { data } = await axiosInstance.get("/api/v1/doctor/list");
+      if (data.success) {
+        setDoctors(data.doctors);
+        // Apply filter if speciality exists
+        if (speciality) {
+          const filtered = data.doctors.filter(
+            (doc) => doc.speciality.toLowerCase() === speciality.toLowerCase()
+          );
+          setFilterDoc(filtered);
+        } else {
+          setFilterDoc(data.doctors);
+        }
+      } else {
+        console.log(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
     }
   };
 
-  // all available specialities
+  // ✅ Refilter whenever speciality or doctor data changes
+  useEffect(() => {
+    if (doctors.length > 0) {
+      if (speciality) {
+        const filtered = doctors.filter(
+          (doc) => doc.speciality.toLowerCase() === speciality.toLowerCase()
+        );
+        setFilterDoc(filtered);
+      } else {
+        setFilterDoc(doctors);
+      }
+    } else {
+      fetchDoctors();
+    }
+  }, [speciality]);
+
+  // All available specialities
   const specialities = [
     "General physician",
     "Gynecologist",
@@ -62,11 +87,12 @@ const Doctors = () => {
           })}
         </div>
 
-        {/* 🧑‍⚕️ Right Doctor Grid */}
-        <div  className="flex flex-wrap gap-6 justify-center md:justify-start flex-1">
+        {/* 🧑‍⚕️ Right Doctor Grid (Your exact UI preserved) */}
+        <div className="flex flex-wrap gap-6 justify-center md:justify-start flex-1">
           {filterDoc.length > 0 ? (
             filterDoc.map((item, index) => (
-              <div onClick={()=> navigate(`/appointments/${item._id}`)}
+              <div
+                onClick={() => navigate(`/appointments/${item._id}`)}
                 key={index}
                 className="border p-4 rounded-lg shadow-md w-56 hover:shadow-lg transition cursor-pointer"
               >

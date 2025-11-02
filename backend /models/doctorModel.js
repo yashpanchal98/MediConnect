@@ -14,11 +14,15 @@ const doctorSchema = new mongoose.Schema(
         fees: { type: Number, required: true },
         address: { type: Object },
         date: { type: Number, required: true },
-        slots_booked: { type: Array, default: {} },
-    },
+        slots_booked: {
+            type: Map,
+            of: [String],
+            default: {},
+        },
+    }, 
     { minimize: false }
 );
 
-const doctorModel = mongoose.model("Doctor", doctorSchema) 
+const doctorModel = mongoose.model("Doctor", doctorSchema)
 
 export default doctorModel;

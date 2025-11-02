@@ -10,6 +10,8 @@ import connectCloudinary from "./config/cloudinary.js";
 
 // routes
 import adminRouter from "./routes/adminRoute.js";
+import doctorRouter from "./routes/doctorRoute.js";
+import userRouter from "./routes/userRoute.js";
 
 // app config
 const port = 8080;
@@ -22,6 +24,8 @@ app.use(cors());
 
 // api endpoints
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/doctor', doctorRouter);
+app.use('/api/v1/user', userRouter);
 
 app.get("/", (req,res) => {
     res.send("app is listing")
