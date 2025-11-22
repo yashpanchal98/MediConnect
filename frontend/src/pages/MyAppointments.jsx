@@ -30,6 +30,51 @@ function MyAppointments() {
     }
   };
 
+
+  // payment gateway integration
+  const initPay = async(order) => {
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_TEST_API_KEY,
+      amount : order.amount,
+      currency : order.currency,
+      name : 'Appointment Payment',
+      description : 'Appointment Payment',
+      order_id : order.id,
+      receipt : order.receipt,
+      handler : async (response) => {
+        console.log(response)
+      }
+    }
+
+    const rzp = new window.Razorpay(options)
+    rzp.open(); 
+  }
+
+
+  const appointmentRazorpay = async (appointmentId) => {
+
+    console.log("triggered", appointmentId);
+    try {
+      const token = localStorage.getItem("token");
+
+      const { data } = await axiosInstance.post(`/api/v1/user/payment-razorpay`, { appointmentId },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (data.success) {
+        initPay(data.order);
+        console.log(data.order);
+      }
+
+    } catch {
+
+    }
+
+  }
+
   useEffect(() => {
     fetchAppointments();
   }, []);
@@ -135,13 +180,12 @@ function MyAppointments() {
 
               {/* Buttons */}
               <div className="flex flex-col gap-3 sm:ml-auto">
-                <button
+                <button onClick={() => appointmentRazorpay(item._id)}
                   disabled={item.cancelled}
-                  className={`px-4 py-2 rounded-md transition ${
-                    item.cancelled
+                  className={`px-4 py-2 rounded-md transition ${item.cancelled
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
+                    }`}
                 >
                   Pay Online
                 </button>
@@ -149,11 +193,10 @@ function MyAppointments() {
                 <button
                   disabled={item.cancelled || cancellingId === item._id}
                   onClick={() => cancelAppointment(item._id)}
-                  className={`px-4 py-2 rounded-md border transition ${
-                    item.cancelled
+                  className={`px-4 py-2 rounded-md border transition ${item.cancelled
                       ? "border-gray-400 text-gray-400 cursor-not-allowed"
                       : "border-blue-600 text-blue-600 hover:bg-blue-50"
-                  }`}
+                    }`}
                 >
                   {cancellingId === item._id ? "Cancelling..." : "Cancel"}
                 </button>

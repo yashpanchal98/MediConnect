@@ -5,6 +5,7 @@ import { axiosInstance } from "../api/axios";
 import { assets } from "../assets/assets";
 
 function Appointment() {
+
   const { docId } = useParams();
   const navigate = useNavigate();
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -50,14 +51,13 @@ function Appointment() {
     for (let i = 0; i < 7; i++) {
       const day = new Date(today);
       day.setDate(today.getDate() + i);
-      const dateKey = day.toISOString().split("T")[0]; // yyyy-mm-dd
+      const dateKey = day.toISOString().split("T")[0];
 
       const startTime = new Date(day);
       const endTime = new Date(day);
       endTime.setHours(21, 0, 0, 0);
 
       if (i === 0) {
-        // if today, start at next available half-hour
         const hour = startTime.getHours() > 10 ? startTime.getHours() + 1 : 10;
         const minute = startTime.getMinutes() > 30 ? 30 : 0;
         startTime.setHours(hour, minute, 0, 0);
@@ -102,6 +102,11 @@ function Appointment() {
     if (docInfo) getAvailableSlots();
   }, [docInfo]);
 
+  // ✅ Ensure slotIndex is always valid
+  useEffect(() => {
+    if (docSlots.length > 0) setSlotIndex(0);
+  }, [docSlots]);
+
   // ✅ Book appointment
   const handleBookAppointment = async () => {
     const token = localStorage.getItem("token");
@@ -120,7 +125,7 @@ function Appointment() {
     try {
       const slotDate = docSlots[slotIndex][0].datetime.toLocaleDateString(
         "en-CA"
-      ); // yyyy-mm-dd
+      );
 
       const { data } = await axiosInstance.post(
         "/api/v1/user/book-appointment",
@@ -132,7 +137,7 @@ function Appointment() {
 
       if (data.success) {
         toast.success("Appointment booked successfully!");
-        // ✅ Update UI instantly
+
         setDocInfo((prev) => {
           const updated = { ...prev };
           if (!updated.slots_booked[slotDate]) {
@@ -141,6 +146,7 @@ function Appointment() {
           updated.slots_booked[slotDate].push(slotTime);
           return updated;
         });
+
         setSlotTime("");
         getAvailableSlots();
       } else {
@@ -220,29 +226,35 @@ function Appointment() {
       <div className="mt-6 font-medium text-gray-700 max-w-5xl mx-auto">
         <p className="text-lg font-semibold mb-3">Booking Slots</p>
 
-        {/* Days */}
+        {/* ✅ Days */}
         <div className="flex gap-3 overflow-x-auto py-2">
-          {docSlots.map((daySlots, index) => (
-            <div
-              key={index}
-              onClick={() => setSlotIndex(index)}
-              className={`flex flex-col items-center px-4 py-2 min-w-[70px] rounded-lg cursor-pointer border transition-colors ${
-                slotIndex === index
-                  ? "bg-blue-500 text-white border-blue-500"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              <p className="text-sm font-semibold">
-                {daysOfWeek[daySlots[0].datetime.getDay()]}
-              </p>
-              <p className="text-xs">{daySlots[0].datetime.getDate()}</p>
-            </div>
-          ))}
+          {docSlots.length > 0 &&
+            docSlots.map((daySlots, index) => {
+              if (!daySlots || !daySlots[0]) return null; // ✅ prevent crash
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => setSlotIndex(index)}
+                  className={`flex flex-col items-center px-4 py-2 min-w-[70px] rounded-lg cursor-pointer border transition-colors ${
+                    slotIndex === index
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <p className="text-sm font-semibold">
+                    {daysOfWeek[daySlots[0].datetime.getDay()]}
+                  </p>
+                  <p className="text-xs">{daySlots[0].datetime.getDate()}</p>
+                </div>
+              );
+            })}
         </div>
 
-        {/* Time Slots */}
+        {/* ✅ Time Slots */}
         <div className="flex flex-wrap gap-3 mt-4">
           {docSlots.length > 0 &&
+            docSlots[slotIndex] &&
             docSlots[slotIndex].map((slot, index) => (
               <button
                 key={index}
@@ -261,7 +273,7 @@ function Appointment() {
             ))}
         </div>
 
-        {/* Book Button */}
+        {/* ✅ Book Button */}
         <button
           onClick={handleBookAppointment}
           disabled={!isLoggedIn || !slotTime}

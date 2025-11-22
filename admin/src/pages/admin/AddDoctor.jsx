@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { assets } from '../../assets/assets';
 import { Upload } from 'lucide-react';
-import { toast } from 'react-toastify';
+import  {toast}  from 'react-toastify';
 import axios from 'axios';
 import { useContext } from 'react';
 import { AdminContext } from '../../context/AdminContext';
@@ -34,77 +34,55 @@ function AddDoctor() {
         }
     };
 
-    const onSubmitHandler = async (event) => {
+const onSubmitHandler = async (event) => {
+    event.preventDefault();
 
-        event.preventDefault();
-
-        try {
-
-            if (!docImg) {
-                toast.error("Image Not Selected");
-            }
-
-            if(password.length < 8){
-                toast.error("Password must be of 8 characters...");
-            }
-
-            // create a new FormData instance
-            const formData = new FormData();
-
-            formData.append('image', docImg);
-            formData.append('name', name);
-            formData.append('email', email);
-            formData.append('password', password);
-            formData.append('experience', experience);
-            formData.append('fees', fee);
-            formData.append('about', about);
-            formData.append('speciality', speciality);
-            formData.append('degree', degree);
-            formData.append('address', JSON.stringify({
-                line1: address1,
-                line2: address2
-            }));
-
-            formData.forEach((value, key) => {
-                console.log(`${key} : ${value}`)
-            })
-
-            try {
-                const response = axiosFormInstance.post(`/api/v1/admin/add-doctor`, formData)
-                console.log(response.data);
-                console.log("Gone");
-                if (response.data.success) {
-                    toast.success("Doctor Added");
-
-                    // reset form fields
-                    setDocImg(false);
-                    setName("");
-                    setEmail("");
-                    setPassword("");
-                    setExperience("1 Year");
-                    setFee("");
-                    setAbout("");
-                    setSpeciality("");
-                    setDegree("");
-                    setAddress1("");
-                    setAddress2("");
-                } else {
-                    toast.error(response.data.message);
-                }
-            } catch (e) {
-                console.error("Error:", err);
-            }
-
-        } catch (error) {
-
+    try {
+        if (!docImg) {
+            return toast.error("Image Not Selected"); 
         }
 
+        if (password.length < 8) {
+            return toast.error("Password must be 8 characters long");
+        }
 
+        const formData = new FormData();
+        formData.append("image", docImg);
+        formData.append("name", name);
+        formData.append("email", email);
+        formData.append("password", password);
+        formData.append("experience", experience);
+        formData.append("fees", fee);
+        formData.append("about", about);
+        formData.append("speciality", speciality);
+        formData.append("degree", degree);
+        formData.append(
+            "address",
+            JSON.stringify({ line1: address1, line2: address2 })
+        );
+
+        const response = await axiosFormInstance.post(
+            `/api/v1/admin/add-doctor`,
+            formData,
+            {
+                headers: { Authorization: `Bearer ${aToken}` }
+            }
+        );
+
+        if (response.data.success) {
+            toast.success("Doctor Added Successfully!");
+        } else {
+            toast.error(response.data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error("Something went wrong");
     }
+};
 
     return (
         <form className="max-w-6xl mx-auto p-6 sm:p-8 lg:p-10">
-            {/* Heading with gradient */}
+
             <div className="mb-8">
                 <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                     Add Doctor

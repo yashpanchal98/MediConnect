@@ -5,6 +5,7 @@ import userModel from "../models/userModel.js";
 import { v2 as cloudinary } from 'cloudinary';
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import razorpay from "razorpay";
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -59,8 +60,8 @@ const registerUser = async (req, res) => {
     console.error("Register error:", error);
     res.json({ success: false, message: error.message });
   }
-};
 
+};
 
 // API for user LOGIN
 const loginUser = async (req, res) => {
@@ -156,7 +157,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-
 // API of appointment booking Appointment Controller
 const bookAppointment = async (req, res) => {
   try {
@@ -248,7 +248,7 @@ const bookAppointment = async (req, res) => {
 // Api of showing all booked appointments {my-appointments frontend page}
 const listAppointments = async (req, res) => {
   try {
-    const userId = req.userId; 
+    const userId = req.userId;
 
     if (!userId) {
       return res.json({
@@ -272,20 +272,17 @@ const listAppointments = async (req, res) => {
 const cancelAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.body;
-    const userId = req.userId; // Auth middleware
+    const userId = req.userId;
 
     if (!appointmentId) {
       return res.json({ success: false, message: "Appointment ID required" });
     }
 
-    // ✅ Find appointment
     const appointment = await appointmentModel.findById(appointmentId);
-
     if (!appointment) {
       return res.json({ success: false, message: "Appointment not found" });
     }
 
-    // ✅ Allow only the user who booked it to cancel
     if (appointment.userId.toString() !== userId.toString()) {
       return res.json({ success: false, message: "Unauthorized" });
     }
@@ -294,22 +291,22 @@ const cancelAppointment = async (req, res) => {
       return res.json({ success: false, message: "Already cancelled" });
     }
 
-    // ✅ Mark appointment cancelled
+    // ✅ Cancel appointment
     appointment.cancelled = true;
     await appointment.save();
 
-    // ✅ Free the doctor slot
+    // ✅ Free doctor slot
     const doctor = await doctorModel.findById(appointment.docId);
+    const { slotDate, slotTime } = appointment;
 
     if (doctor && doctor.slots_booked) {
-      const { slotDate, slotTime } = appointment;
+      const normalizedTime = slotTime.toLowerCase().trim();
 
       if (doctor.slots_booked[slotDate]) {
         doctor.slots_booked[slotDate] = doctor.slots_booked[slotDate].filter(
-          (t) => t !== slotTime
+          (t) => t.toLowerCase().trim() !== normalizedTime
         );
 
-        // ✅ If no slots left for that day, delete the key
         if (doctor.slots_booked[slotDate].length === 0) {
           delete doctor.slots_booked[slotDate];
         }
@@ -328,4 +325,37 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointments, cancelAppointment };
+// Razorpay Instance
+const razorpayInstance = new razorpay({
+  key_id: process.env.RAZORPAY_TEST_API_KEY,
+  key_secret: process.env.RAZORPAY_TEST_KEY_SECRET
+})
+
+// API TO MAKE PAYMENT OF APPOINTMENT USING RAZORPAY
+const paymentRazorpay = async (req, res) => {
+
+  try {
+    const { appointmentId } = req.body;
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (!appointmentData || appointmentData.cancelled) {
+      return res.json({ success: false, message: "Appointment cancelled or Appointment not found" });
+    }
+
+    // creating options for the razorpay payment
+    const options = {
+      amount: appointmentData.amount * 100,
+      currency: process.env.CURRENCY,
+      receipt: appointmentId
+    }
+    
+    // creating an order
+    const order = await razorpayInstance.orders.create(options);
+    res.json({ success: true, order });
+
+  } catch (error) {
+    console.error("Cancel appointment error:", error);
+    res.json({ success: false, message: error.message });
+  }
+}
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointments, cancelAppointment, paymentRazorpay };
