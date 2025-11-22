@@ -4,6 +4,8 @@ import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import fs from "fs";
 import jwt from "jsonwebtoken";
+import appointmentModel from "../models/appointmentModel.js";
+import userModel from "../models/userModel.js";
 
 const addDoctor = async (req, res) => {
     try {
@@ -70,38 +72,101 @@ const addDoctor = async (req, res) => {
 
 
 // admin login
-const loginAdmin = async(req,res) => {
-    try{
-        
+const loginAdmin = async (req, res) => {
+    try {
+
         console.log("Login API hit...");
-        const {email, password} = req.body;
-        if(email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD){
-            const token = jwt.sign(email+password,process.env.JWT_SECRET)
-            res.json({success:true, token});
+        const { email, password } = req.body;
+        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+            const token = jwt.sign(email + password, process.env.JWT_SECRET)
+            res.json({ success: true, token });
         } else {
             console.log(error);
-            res.json({success:false, message:"wrong admin credentials"});
+            res.json({ success: false, message: "wrong admin credentials" });
 
         }
 
-    } catch(error) {
+    } catch (error) {
         console.log(error);
-        res.json({success:false, message:"wrong admin credentials"});
+        res.json({ success: false, message: "wrong admin credentials" });
     }
 }
 
 // all doctor
-const allDoctors = async(req,res) => {
+const allDoctors = async (req, res) => {
 
-    try{
+    try {
 
         const doctors = await doctorModel.find({}).select('-password');
-        res.json({success:true , doctors})
+        res.json({ success: true, doctors })
 
     } catch (error) {
-        res.json({success:false , message:error.message})
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// API TO GET ALL APPOINTMENT LIST
+const appointmentsAdmin = async (req, res) => {
+    try {
+
+        const appointments = await appointmentModel.find({});
+        res.json({ success: true, appointments });
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 }
 
 
-export { addDoctor, loginAdmin, allDoctors };
+const getDashboardStats = async (req, res) => {
+    try {
+        const totalDoctors = await doctorModel.countDocuments();
+        const totalAppointments = await appointmentModel.countDocuments();
+        const totalUsers = await userModel.countDocuments();
+
+        const totalRevenueAgg = await appointmentModel.aggregate([
+            { $match: { payment: true } },
+            { $group: { _id: null, sum: { $sum: "$amount" } } }
+        ]);
+
+        // Calculate total earnings
+        const totalEarnings = await appointmentModel.aggregate([
+            { $match: { payment: true } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+
+        const earnings = totalEarnings[0]?.total || 0;
+
+        return res.json({
+            success: true,
+            data: {
+                totalUsers,
+                totalDoctors,
+                totalAppointments,
+                totalEarnings: earnings
+            }
+        });
+
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+const getTodayAppointments = async (req, res) => {
+    try {
+        const today = new Date().toISOString().split("T")[0];
+
+        const appointments = await appointmentModel.find({ slotDate: today })
+            .populate("docId", "name speciality image")
+            .populate("userId", "name email");
+
+        res.json({ success: true, appointments });
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, getTodayAppointments, getDashboardStats };
