@@ -13,7 +13,7 @@ const addDoctor = async (req, res) => {
         const imageFile = req.file;
 
         // 1️⃣ Validate required fields
-        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees) {
             return res.status(400).json({ success: false, message: "Missing required details" });
         }
 

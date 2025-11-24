@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { axiosInstance } from "../../api/axios";
-import { AdminContext } from "../../context/AdminContext"; 
+import { AdminContext } from "../../context/AdminContext";
 import { toast } from "react-toastify";
 
 function AllAppointments() {
@@ -9,11 +9,11 @@ function AllAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  
+
   const fetchAppointments = async () => {
     try {
       const { data } = await axiosInstance.get(
-        "/api/v1/admin/appointments", 
+        "/api/v1/admin/appointments",
         {
           headers: { Authorization: `Bearer ${adminToken}` },
         }
@@ -32,13 +32,17 @@ function AllAppointments() {
     }
   };
 
+  const getStatus = (slotDate, slotTime) => {
+  const appointmentDateTime = new Date(`${slotDate} ${slotTime}`);
+
+  const now = new Date();
+  return appointmentDateTime < now ? "Fulfilled" : "Active";
+};
+
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  // ============================
-  // UI
-  // ============================
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center text-blue-600 text-lg">
@@ -79,13 +83,13 @@ function AllAppointments() {
                 </td>
               </tr>
             ) : (
-              appointments.map((appt,index) => (
+              appointments.map((appt, index) => (
                 <tr
                   key={appt._id}
                   className="border text-sm hover:bg-gray-50 transition"
                 >
-                   <td className="px-4 py-3 border font-medium">
-                    {index+1}
+                  <td className="px-4 py-3 border font-medium">
+                    {index + 1}
                   </td>
 
                   <td className="px-4 py-3 border font-medium">
@@ -120,8 +124,13 @@ function AllAppointments() {
                         Cancelled
                       </span>
                     ) : (
-                      <span className="text-blue-600 font-semibold">
-                        Active
+                      <span
+                        className={`px-2 py-1 text-sm rounded-md ${getStatus(appt.slotDate, appt.slotTime) === "Fulfilled"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                          }`}
+                      >
+                        {getStatus(appt.slotDate, appt.slotTime)}
                       </span>
                     )}
                   </td>

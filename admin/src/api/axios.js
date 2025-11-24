@@ -18,10 +18,19 @@ export const axiosFormInstance = axios.create({
 
 const addAuthInterceptor = (instance) => {
   instance.interceptors.request.use((config) => {
-    const token = localStorage.getItem("aToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+
+
+    if (config.url.startsWith("/api/v1/admin")) {
+      const aToken = localStorage.getItem("aToken");
+      if (aToken) config.headers.Authorization = `Bearer ${aToken}`;
     }
+
+
+    if (config.url.startsWith("/api/v1/doctor")) {
+      const dToken = localStorage.getItem("dToken");
+      if (dToken) config.headers.Authorization = `Bearer ${dToken}`;
+    }
+
     return config;
   });
 };

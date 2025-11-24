@@ -1,20 +1,34 @@
+import { createContext, useState, useEffect } from "react";
 
-import { createContext } from "react";
-
-// Create the context
 export const DoctorContext = createContext();
 
-// Create the provider component
-const DoctorContextProvider = (props) => {
-  // Define the values you want to provide
+const DoctorContextProvider = ({ children }) => {
+  
+  // Load from localStorage ONCE
+  const [dToken, setDToken] = useState(
+    localStorage.getItem("dToken") || ""
+  );
+
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+  // Sync with localStorage whenever dToken changes
+  useEffect(() => {
+    if (dToken) {
+      localStorage.setItem("dToken", dToken);
+    } else {
+      localStorage.removeItem("dToken");
+    }
+  }, [dToken]);
+
   const value = {
-    // example: user: null,
-    // example: setUser: () => {},
+    dToken,
+    setDToken,
+    backendUrl
   };
 
   return (
     <DoctorContext.Provider value={value}>
-      {props.children}
+      {children}
     </DoctorContext.Provider>
   );
 };

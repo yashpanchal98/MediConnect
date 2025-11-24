@@ -1,6 +1,8 @@
 import doctorModel from "../models/doctorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import appointmentModel from "../models/appointmentModel.js";
+import authDoctor from "../middleware/authDoctor.js";
 
 // getting detail of each doctor 
 const getDoctorById = async (req, res) => {
@@ -8,6 +10,7 @@ const getDoctorById = async (req, res) => {
     const { doctorId } = req.params;
 
     const doctor = await doctorModel.findById(doctorId);
+    console.log(doctor);
 
     if (!doctor) {
       return res.status(404).json({
@@ -120,4 +123,80 @@ const loginDoctor = async (req, res) => {
     });
   }
 };
-export { changeAvailability , doctorList, getDoctorById};
+
+// API TO GET ALL APPOINTMENTS OF A PARTICULAR DOCTOR
+const getDoctorAppointments = async (req, res) => {
+  try {
+    const doctorId = req.doctorId; // coming from authDoctor middleware
+    console.log(doctorId);
+
+    const appointments = await appointmentModel
+      .find({ docId: doctorId })
+      .sort({ date: 1 }); 
+
+    res.status(200).json({
+      success: true,
+      message: "Doctor appointments fetched",
+      appointments,
+    });
+  } catch (error) {
+    console.error("Get Doctor Appointments Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch appointments",
+    });
+  }
+};
+
+
+// UPDATE DOCTOR PROFILE
+const updateDoctorProfile = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    const doctor = await doctorModel.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
+    }
+
+    // 🔹 Update simple text fields
+    const { name, phone, speciality, fees, about, gender, dob } = req.body;
+
+    if (name) doctor.name = name;
+    if (phone) doctor.phone = phone;
+    if (speciality) doctor.speciality = speciality;
+    if (fees) doctor.fees = fees;
+    if (about) doctor.about = about;
+    if (gender) doctor.gender = gender;
+    if (dob) doctor.dob = dob;
+
+    // 🔹 Update address object
+    if (req.body.address) {
+      const address = JSON.parse(req.body.address);
+      doctor.address = address;
+    }
+
+    // 🔹 Update image if uploaded
+    if (req.file) {
+      doctor.image = req.file.path; // Cloudinary or local path
+    }
+
+    await doctor.save();
+
+    res.json({
+      success: true,
+      message: "Doctor profile updated successfully",
+      doctor,
+    });
+
+  } catch (error) {
+    console.error("Update Doctor Profile Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update doctor profile",
+    });
+  }
+};
+
+
+export { changeAvailability , doctorList, getDoctorById, loginDoctor, getDoctorAppointments, updateDoctorProfile};

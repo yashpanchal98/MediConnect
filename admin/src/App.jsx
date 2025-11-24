@@ -11,12 +11,17 @@ import Dashboard from './pages/admin/Dashboard';
 import AllAppointments from './pages/admin/AllAppointments';
 import AddDoctor from './pages/admin/AddDoctor';
 import DoctorsList from './pages/admin/DoctorsList';
+import { DoctorContext } from './context/DoctorContext';
+import DoctorDashBoard from './pages/doctor/DoctorDashBoard';
+import DoctorAppointment from './pages/doctor/DoctorAppointment';
+import DoctorProfile from './pages/doctor/DoctorProfile';
 
 function App() {
   const [count, setCount] = useState(0)
   const {aToken}  = useContext(AdminContext);
+  const {dToken} = useContext(DoctorContext);
 
-  return aToken ? (
+  return aToken || dToken ? (
     <>
 
       <ToastContainer />
@@ -25,11 +30,17 @@ function App() {
         <SideBar/>
         <Routes>
 
+          {/* Admin Route */}
           <Route path='/' element={<></>} />
           <Route path='/admin-dashboard' element={<Dashboard/>} />
           <Route path='/all-appointments' element={<AllAppointments/>} />
           <Route path='/add-doctor' element={<AddDoctor/>} />
           <Route path='/doctor-list' element={<DoctorsList/>} />
+
+          {/* Doctor Routes */}
+          <Route path='/doctor-dashboard' element={<DoctorDashBoard/>} />
+          <Route path='/doctor-appointments' element={<DoctorAppointment/>} />
+          <Route path='/doctor-profile' element={<DoctorProfile/>} />
 
         </Routes>
 

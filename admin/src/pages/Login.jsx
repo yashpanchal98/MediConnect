@@ -1,12 +1,13 @@
 import React, { useContext, useState } from "react";
-import { assets } from "../assets/assets.js";
 import { AdminContext } from "../context/AdminContext.jsx";
+import { DoctorContext } from "../context/DoctorContext.jsx"; // ⬅ make sure this exists
 import axios from "axios";
 import { toast } from "react-toastify";
 
 const Login = () => {
     const [state, setState] = useState("Admin");
     const { setAToken, backendUrl } = useContext(AdminContext);
+    const { setDToken } = useContext(DoctorContext); // ⬅ doctor context
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -15,27 +16,37 @@ const Login = () => {
         e.preventDefault();
         try {
             if (state === "Admin") {
-                const { data } = await axios.post(`${backendUrl}/api/v1/admin/login`, { email, password });
-                // console.log("Response from backend:", data);
+                const { data } = await axios.post(`${backendUrl}/api/v1/admin/login`, {
+                    email,
+                    password,
+                });
+
                 if (data.success) {
-                    // console.log("Admin token:", data.token);
                     setAToken(data.token);
-                    localStorage.setItem("aToken", data.token); 
-                    toast.success("Logging..")
+                    localStorage.setItem("aToken", data.token);
+                    toast.success("Logging in...");
                 } else {
-                    // wrong credentials
-                    toast.error("Wrong Credentials")
+                    toast.error("Wrong credentials");
                 }
-                console.log(data);
             } else {
+                // ⭐ DOCTOR LOGIN
+                const { data } = await axios.post(`${backendUrl}/api/v1/doctor/login`, {
+                    email,
+                    password,
+                });
 
+                if (data.success) {
+                    setDToken(data.token);
+                    localStorage.setItem("dToken", data.token);
+                    toast.success("Doctor logged in...");
+                    console.log(data.token);
+                } else {
+                    toast.error("Wrong credentials");
+                }
             }
-
-
         } catch (err) {
-
+            toast.error("Something went wrong");
         }
-
     };
 
     return (
@@ -73,7 +84,6 @@ const Login = () => {
                     />
                 </div>
 
-                {/* Submit Button */}
                 <button
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition-all duration-300"
