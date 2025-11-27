@@ -90,21 +90,38 @@ function SideBar() {
                         </h2>
 
                         <ul className="flex flex-col gap-2">
-                            <NavLink to="/doctor-dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
+                            <NavLink
+                                to="/doctor-dashboard"
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 ${isActive ? "bg-blue-100 text-blue-600" : ""
+                                    }`
+                                }
+                            >
                                 <img src={assets.home_icon} className="w-5" />
                                 <p>Dashboard</p>
                             </NavLink>
 
-                            <NavLink to="/doctor-appointments" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
+                            <NavLink
+                                to="/doctor-appointments"
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 ${isActive ? "bg-blue-100 text-blue-600" : ""
+                                    }`
+                                }
+                            >
                                 <img src={assets.appointment_icon} className="w-5" />
                                 <p>Appointments</p>
                             </NavLink>
 
-                            <NavLink to="/doctor-profile" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100">
+                            <NavLink
+                                to="/doctor-profile"
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 ${isActive ? "bg-blue-100 text-blue-600" : ""
+                                    }`
+                                }
+                            >
                                 <img src={assets.people_icon} className="w-5" />
                                 <p>My Profile</p>
                             </NavLink>
-
                         </ul>
                     </nav>
                 </aside>

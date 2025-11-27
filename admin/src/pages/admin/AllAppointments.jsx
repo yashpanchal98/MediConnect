@@ -9,15 +9,33 @@ function AllAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
-  const fetchAppointments = async () => {
+  const markPaymentAsPaid = async (appointmentId) => {
     try {
-      const { data } = await axiosInstance.get(
-        "/api/v1/admin/appointments",
+      const { data } = await axiosInstance.post(
+        "/api/v1/admin/update-payment",
+        { appointmentId },
         {
           headers: { Authorization: `Bearer ${adminToken}` },
         }
       );
+
+      if (data.success) {
+        toast.success("Payment updated to Paid");
+        fetchAppointments();
+      } else {
+        toast.error("Failed to update payment");
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Error updating payment");
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      const { data } = await axiosInstance.get("/api/v1/admin/appointments", {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
 
       if (data.success) {
         setAppointments(data.appointments);
@@ -33,11 +51,21 @@ function AllAppointments() {
   };
 
   const getStatus = (slotDate, slotTime) => {
-  const appointmentDateTime = new Date(`${slotDate} ${slotTime}`);
+    const apptDateTime = new Date(`${slotDate} ${slotTime}`);
+    return apptDateTime < new Date() ? "Fulfilled" : "Active";
+  };
 
-  const now = new Date();
-  return appointmentDateTime < now ? "Fulfilled" : "Active";
-};
+  // ⭐ AUTOMATE PAYMENT UPDATE after table is rendered
+  useEffect(() => {
+    appointments.forEach((appt) => {
+      const status = getStatus(appt.slotDate, appt.slotTime);
+
+      if (status === "Fulfilled" && !appt.payment) {
+        markPaymentAsPaid(appt._id);
+      }
+    });
+    // eslint-disable-next-line
+  }, [appointments]);
 
   useEffect(() => {
     fetchAppointments();
@@ -75,67 +103,63 @@ function AllAppointments() {
           <tbody>
             {appointments.length === 0 ? (
               <tr>
-                <td
-                  colSpan="6"
-                  className="text-center text-gray-600 py-6 text-sm"
-                >
+                <td colSpan="8" className="text-center text-gray-600 py-6 text-sm">
                   No appointments found
                 </td>
               </tr>
             ) : (
-              appointments.map((appt, index) => (
-                <tr
-                  key={appt._id}
-                  className="border text-sm hover:bg-gray-50 transition"
-                >
-                  <td className="px-4 py-3 border font-medium">
-                    {index + 1}
-                  </td>
+              appointments.map((appt, index) => {
+                const status = getStatus(appt.slotDate, appt.slotTime);
 
-                  <td className="px-4 py-3 border font-medium">
-                    Dr. {appt.docData?.name || "Unknown"}
-                  </td>
+                return (
+                  <tr
+                    key={appt._id}
+                    className="border text-sm hover:bg-gray-50 transition"
+                  >
+                    <td className="px-4 py-3 border">{index + 1}</td>
 
-                  <td className="px-4 py-3 border">
-                    {appt.userData?.name || "Unknown"}
-                  </td>
+                    <td className="px-4 py-3 border">
+                      Dr. {appt.docData?.name || "Unknown"}
+                    </td>
 
-                  <td className="px-4 py-3 border">{appt.slotDate}</td>
+                    <td className="px-4 py-3 border">
+                      {appt.userData?.name || "Unknown"}
+                    </td>
 
-                  <td className="px-4 py-3 border">{appt.slotTime}</td>
+                    <td className="px-4 py-3 border">{appt.slotDate}</td>
 
-                  <td className="px-4 py-3 border">Rs. {appt.amount}</td>
+                    <td className="px-4 py-3 border">{appt.slotTime}</td>
 
-                  <td className="px-4 py-3 border">
-                    {appt.payment ? (
-                      <span className="text-green-600 font-semibold">
-                        Paid
-                      </span>
-                    ) : (
-                      <span className="text-red-500 font-medium">
-                        Pending
-                      </span>
-                    )}
-                  </td>
+                    <td className="px-4 py-3 border">Rs. {appt.amount}</td>
 
-                  <td className="px-4 py-3 border">
-                    {appt.cancelled ? (
-                      <span className="text-red-600 font-semibold">
-                        Cancelled
-                      </span>
-                    ) : (
-                      <span
-                        className={`px-2 py-1 text-sm rounded-md ${getStatus(appt.slotDate, appt.slotTime) === "Fulfilled"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-blue-100 text-blue-700"
+                    {/* Payment Column */}
+                    <td className="px-4 py-3 border">
+                      {appt.payment ? (
+                        <span className="text-green-600 font-semibold">Paid</span>
+                      ) : (
+                        <span className="text-red-500 font-medium">Pending</span>
+                      )}
+                    </td>
+
+                    {/* Status column */}
+                    <td className="px-4 py-3 border">
+                      {appt.cancelled ? (
+                        <span className="text-red-600 font-semibold">Cancelled</span>
+                      ) : (
+                        <span
+                          className={`px-2 py-1 text-sm rounded-md ${
+                            status === "Fulfilled"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-blue-100 text-blue-700"
                           }`}
-                      >
-                        {getStatus(appt.slotDate, appt.slotTime)}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
+                        >
+                          {status}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

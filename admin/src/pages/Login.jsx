@@ -1,16 +1,19 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState} from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
 import { DoctorContext } from "../context/DoctorContext.jsx"; // ⬅ make sure this exists
 import axios from "axios";
 import { toast } from "react-toastify";
+import {useNavigate} from "react-router-dom"
 
 const Login = () => {
     const [state, setState] = useState("Admin");
     const { setAToken, backendUrl } = useContext(AdminContext);
-    const { setDToken } = useContext(DoctorContext); // ⬅ doctor context
+    const { setDToken } = useContext(DoctorContext);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+    const navigate = useNavigate();
 
     const onSubmitHandler = async (e) => {
         e.preventDefault();
@@ -25,11 +28,12 @@ const Login = () => {
                     setAToken(data.token);
                     localStorage.setItem("aToken", data.token);
                     toast.success("Logging in...");
+                    navigate("/dashboard");
                 } else {
                     toast.error("Wrong credentials");
                 }
             } else {
-                // ⭐ DOCTOR LOGIN
+                // DOCTOR LOGIN
                 const { data } = await axios.post(`${backendUrl}/api/v1/doctor/login`, {
                     email,
                     password,

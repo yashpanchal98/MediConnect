@@ -13,8 +13,13 @@ const Navbar = () => {
     if (aToken) {
       setAToken("");
       localStorage.removeItem("aToken");
+      navigate("/login")
     }
-    navigate("/");
+    if(dToken){
+      setDToken("");
+      localStorage.removeItem("dToken");
+      navigate("/doctor-dashboard");
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { DoctorContext } from "../../context/DoctorContext";
-import { axiosInstance } from "../../api/axios";
+import { axiosFormInstance, axiosInstance } from "../../api/axios";
 import { toast } from "react-toastify";
 
 function DoctorProfile() {
@@ -11,6 +11,7 @@ function DoctorProfile() {
 
   // Fetch doctor profile
   useEffect(() => {
+    
     const fetchProfile = async () => {
       try {
         const token = dToken || localStorage.getItem("dToken");
@@ -21,9 +22,6 @@ function DoctorProfile() {
 
         const res = await axiosInstance.get(
           `/api/v1/doctor/get-profile/${doctorId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
         );
 
         if (res.data.success) {
@@ -62,15 +60,9 @@ function DoctorProfile() {
       const decoded = JSON.parse(atob(token.split(".")[1]));
       const doctorId = decoded.id;
 
-      const res = await axiosInstance.post(
+      const res = await axiosFormInstance.post(
         `/api/v1/doctor/update-profile/${doctorId}`,
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
       );
 
       if (res.data.success) {

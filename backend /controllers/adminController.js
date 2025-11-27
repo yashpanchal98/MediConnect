@@ -169,4 +169,19 @@ const getTodayAppointments = async (req, res) => {
     }
 };
 
-export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, getTodayAppointments, getDashboardStats };
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, {
+      payment: true
+    });
+
+    res.json({ success: true, message: "Payment marked as paid" });
+
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, getTodayAppointments, getDashboardStats, updatePaymentStatus };

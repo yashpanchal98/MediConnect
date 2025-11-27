@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import authDoctor from "../middleware/authDoctor.js";
+import { v2 as cloudinary } from 'cloudinary';
 
 // getting detail of each doctor 
 const getDoctorById = async (req, res) => {
@@ -67,11 +68,11 @@ const changeAvailability = async (req, res) => {
 const doctorList = async (req, res) => {
   try {
 
-    const doctors = await doctorModel.find({}).select(['-password','-email']); 
-    res.json({success:true, doctors})
+    const doctors = await doctorModel.find({}).select(['-password', '-email']);
+    res.json({ success: true, doctors })
 
   } catch (error) {
-    res.json({success:false, message:error.message});
+    res.json({ success: false, message: error.message });
   }
 }
 
@@ -132,7 +133,7 @@ const getDoctorAppointments = async (req, res) => {
 
     const appointments = await appointmentModel
       .find({ docId: doctorId })
-      .sort({ date: 1 }); 
+      .sort({ date: 1 });
 
     res.status(200).json({
       success: true,
@@ -178,7 +179,11 @@ const updateDoctorProfile = async (req, res) => {
 
     // 🔹 Update image if uploaded
     if (req.file) {
-      doctor.image = req.file.path; // Cloudinary or local path
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "doctor_images",
+      });
+
+      doctor.image = uploadResult.secure_url; 
     }
 
     await doctor.save();
@@ -199,4 +204,4 @@ const updateDoctorProfile = async (req, res) => {
 };
 
 
-export { changeAvailability , doctorList, getDoctorById, loginDoctor, getDoctorAppointments, updateDoctorProfile};
+export { changeAvailability, doctorList, getDoctorById, loginDoctor, getDoctorAppointments, updateDoctorProfile };
