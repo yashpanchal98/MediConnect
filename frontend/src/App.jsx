@@ -18,7 +18,7 @@ function App() {
 
   return (
     <>
-        <div className='mx-4 sm:mx-[10%]'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6'>
         <Navbar/>
           <Routes>
 

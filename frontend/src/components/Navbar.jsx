@@ -6,6 +6,7 @@ import { UserContext } from "../context/userContext";
 function Navbar() {
     const navigate = useNavigate();
     const [token, setToken] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
     const { user, setUser } = useContext(UserContext);
 
     // ✅ Load token from localStorage when component mounts
@@ -28,6 +29,7 @@ function Navbar() {
         setUser(null);
         setToken(null);
         navigate("/login");
+        setMenuOpen(false);
     };
 
     // ✅ Handle Create Account button click
@@ -39,11 +41,11 @@ function Navbar() {
         user?.image || assets.profile_pic; // fallback if user image missing
 
     return (
-        <nav className="flex items-center justify-between px-6 py-4 shadow-md bg-white sticky top-0 z-50">
+        <nav className="flex items-center justify-between px-4 sm:px-6 py-4 shadow-md bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-50">
             {/* Logo */}
             <Link to="/">
                 <img
-                    className="w-36 md:w-44 cursor-pointer transition-transform duration-200 hover:scale-105"
+                    className="w-32 sm:w-36 md:w-44 cursor-pointer transition-transform duration-200 hover:scale-105"
                     src={assets.logo}
                     alt="Logo"
                 />
@@ -119,6 +121,68 @@ function Navbar() {
                         Create Account
                     </button>
                 )}
+            </div>
+            {/* Mobile Menu Toggle */}
+            <button
+                className="md:hidden inline-flex items-center justify-center p-2 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                aria-label="Toggle menu"
+            >
+                <span className="sr-only">Toggle navigation</span>
+                <div className="space-y-1">
+                    {[0, 1, 2].map((line) => (
+                        <span
+                            key={line}
+                            className={`block h-0.5 w-5 rounded-full bg-current transition-transform ${
+                                menuOpen ? (line === 1 ? "opacity-0" : line === 0 ? "translate-y-1.5 rotate-45" : "-translate-y-1.5 -rotate-45") : ""
+                            }`}
+                        />
+                    ))}
+                </div>
+            </button>
+
+            {/* Mobile Drawer */}
+            <div
+                className={`md:hidden fixed inset-x-4 top-20 rounded-2xl border border-gray-100 bg-white/95 shadow-xl transition-all duration-300 ${
+                    menuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-3 pointer-events-none"
+                }`}
+            >
+                <ul className="flex flex-col gap-2 p-5 font-medium text-gray-700">
+                    {["/", "/doctors", "/about", "/contact"].map((path, idx) => {
+                        const labels = ["Home", "All Doctors", "About", "Contact"];
+                        return (
+                            <li key={idx}>
+                                <NavLink
+                                    to={path}
+                                    onClick={() => setMenuOpen(false)}
+                                    className={({ isActive }) =>
+                                        `block rounded-xl px-4 py-2 transition ${isActive ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100"}`
+                                    }
+                                >
+                                    {labels[idx]}
+                                </NavLink>
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                <div className="border-t border-gray-100 px-5 py-4">
+                    {token ? (
+                        <button
+                            onClick={handleLogout}
+                            className="w-full rounded-xl border border-red-200 bg-red-50/70 px-4 py-2 text-red-600 font-medium hover:bg-red-100 transition"
+                        >
+                            Logout
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleLoginClick}
+                            className="w-full rounded-xl bg-indigo-500 px-4 py-2 text-white font-medium hover:bg-indigo-600 transition"
+                        >
+                            Create Account
+                        </button>
+                    )}
+                </div>
             </div>
         </nav>
     );

@@ -14,7 +14,7 @@ import doctorRouter from "./routes/doctorRoute.js";
 import userRouter from "./routes/userRoute.js";
 
 // app config
-const port = 8080;
+const port = process.env.PORT ||  8080;
 connectDB();
 connectCloudinary();
 

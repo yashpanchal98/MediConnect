@@ -175,9 +175,9 @@ function Appointment() {
     );
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
       {/* Doctor Info */}
-      <div className="flex flex-col md:flex-row bg-white shadow-lg rounded-xl overflow-hidden gap-6 md:gap-10 p-6 md:p-10">
+      <div className="flex flex-col md:flex-row bg-white shadow-xl rounded-3xl overflow-hidden gap-6 md:gap-10 p-6 md:p-10">
         <div className="flex-shrink-0 w-full md:w-1/3">
           <img
             src={docInfo.image}
@@ -223,7 +223,7 @@ function Appointment() {
       </div>
 
       {/* Booking Slots */}
-      <div className="mt-6 font-medium text-gray-700 max-w-5xl mx-auto">
+      <div className="mt-8 font-medium text-gray-700 bg-white/70 backdrop-blur border border-gray-100 rounded-3xl p-6 shadow-sm">
         <p className="text-lg font-semibold mb-3">Booking Slots</p>
 
         {/* ✅ Days */}
