@@ -5,7 +5,7 @@ const app = express();
 
 import cors from "cors";
 import 'dotenv/config'
-import connectDB from "./config/mongodb.js";
+import connectDB from "./config/mongoDB.js";
 import connectCloudinary from "./config/cloudinary.js";
 
 // routes
